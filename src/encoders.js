@@ -48,16 +48,17 @@ const awsEncoderSetForBrowser = {
      */
     return base64Url.substring(base64Url.indexOf(',') + 1)
   },
-  /** @param {any} data */
+  /** @param {string | ArrayBuffer} data */
   responseDecoder: (data) => {
-    let arr = new Uint8Array(data)
-
-    if (!(data instanceof ArrayBuffer)) {
-      arr = new Uint8Array(data.length)
-      arr.forEach((_, index) => {
-        arr[index] = data.charCodeAt(index)
-      })
+	if (data instanceof ArrayBuffer) {
+      return new Uint8Array(data)
     }
+
+    const arr = new Uint8Array(data.length)
+
+    arr.forEach((_, index) => {
+      arr[index] = data.charCodeAt(index)
+    })
 
     return arr
   }
@@ -97,15 +98,13 @@ const awsEncoderSetForNode = {
  * @returns {EncoderSet}
  */
 export function getEncoderSet (socketType) {
+  if (socketType === 'arraybuffer') {
+    return defaultEncoderSet
+  }
+
   const isBrowser = typeof window !== 'undefined'
 
-  if (isBrowser) {
-    return socketType === 'arraybuffer'
-      ? defaultEncoderSet
-      : awsEncoderSetForBrowser
-  } else {
-    return socketType === 'arraybuffer'
-      ? defaultEncoderSet
-      : awsEncoderSetForNode
-  }
+  return (isBrowser)
+    ? awsEncoderSetForBrowser
+    : awsEncoderSetForNode;
 }
